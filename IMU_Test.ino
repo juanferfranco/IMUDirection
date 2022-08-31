@@ -10,8 +10,8 @@ WiFiUDP udpDevice;
 uint16_t localUdpPort = 3302;
 uint16_t UDPPort = 3301;
 
-float accX = 0.0F;  // Define variables for storing inertial sensor data
-float accY = 0.0F;  //定义存储惯性传感器相关数据的相关变量
+float accX = 0.0F;  
+float accY = 0.0F;  
 float accZ = 0.0F;
 
 float offsetArr[3] = {0.0F};
@@ -38,7 +38,6 @@ void drawSpot(int ax, int ay) {
   x = map(constrain(ax, -300, 300), -300, 300, 40, 280);
   y = map(constrain(ay, -300, 300), -300, 300, 240, 0);
 
-  //M5.Lcd.fillScreen(BLACK);
   M5.Lcd.fillCircle(prevx, prevy, 7, BLACK);
   drawGrid();
   M5.Lcd.fillCircle(x, y, 7, WHITE);
@@ -93,11 +92,6 @@ void loop() {
     drawSpot((int)((accX - offsetArr[0]) * 1000), (int)((accY - offsetArr[1]) * 1000));
   }
 
-
-
-  //M5.Axp.LightSleep(SLEEP_SEC(1));
-
-
   currentTime = millis();
   if ( (currentTime - printIMUTime ) > 1000) {
     printIMUTime = currentTime;
@@ -130,19 +124,4 @@ void loop() {
 
     }
   }
-
-  /*
-    uint8_t packetSize = udpDevice.parsePacket();
-    if (packetSize) {
-      Serial.print("Data from: ");
-      Serial.print(udpDevice.remoteIP());
-      Serial.print(":");
-      Serial.print(udpDevice.remotePort());
-      Serial.print(' ');
-      for (uint8_t i = 0; i < packetSize; i++) {
-        Serial.write(udpDevice.read());
-      }
-    }
-  */
-
 }
