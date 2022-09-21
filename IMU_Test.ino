@@ -1,4 +1,3 @@
-
 #define M5STACK_MPU6886
 #include <M5Core2.h>
 #include "password.h"
@@ -7,8 +6,10 @@
 #include <string.h>
 
 WiFiUDP udpDevice;
-uint16_t localUdpPort = 3302;
-uint16_t UDPPort = 3301;
+uint16_t localUdpPort = 3302; // Puerto de escucha del propio sensor
+uint16_t UDPPort = 3301; // Puerto al que enviará la información el sensor.
+                         // El cliente (Unity) debería estar escuchando este puerto.
+const char *unityIP = "192.168.1.12"; 
 
 float accX = 0.0F;  
 float accY = 0.0F;  
@@ -52,7 +53,6 @@ void setup() {
   M5.IMU.Init();  //Init IMU sensor
   getOffset(offsetArr);
   M5.Axp.SetLed(0);
-
   /*
     M5.Lcd.setTextColor(
     GREEN,
@@ -60,10 +60,8 @@ void setup() {
     M5.Lcd.setTextSize(2);
   */
   Serial.begin(115200);
-
   Serial.print("Connecting to ");
   Serial.println(ssid);
-
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
@@ -75,8 +73,7 @@ void setup() {
   Serial.println("WiFi connected");
   // Print the IP address
   Serial.println(WiFi.localIP());
-  udpDevice.begin(localUdpPort);
-
+  udpDevice.begin(localUdpPort); 
 }
 
 void loop() {
@@ -95,9 +92,7 @@ void loop() {
   currentTime = millis();
   if ( (currentTime - printIMUTime ) > 1000) {
     printIMUTime = currentTime;
-
     M5.IMU.getAccelData(&accX, &accY, &accZ);
-
     int x, y;
     x = (int)((accX - offsetArr[0]) * 1000);
     y = (int)((accY - offsetArr[1]) * 1000);
@@ -106,19 +101,12 @@ void loop() {
     if (y >= 150) {
       auto m = (accX - offsetArr[0]) / (accY - offsetArr[1]);
       printf("m: %f\n", m);
+      M5.Lcd.setCursor(0, 20);
+      M5.Lcd.printf("m: %f", m);
 
-      //M5.Lcd.setCursor(0, 20);
-      //M5.Lcd.printf("m: %f", m);
 
-      // send back a reply, to the IP address and port we got the packet from
-      udpDevice.beginPacket("192.168.1.12", UDPPort);
+      udpDevice.beginPacket(unityIP, UDPPort);
       udpDevice.write((uint8_t *)&m, 4);
-      udpDevice .endPacket();
-
-      udpDevice.beginPacket("192.168.1.12", UDPPort);
-      char buff[64];
-      sprintf(buff, "Vbat:%f/Cbat:%f\n", M5.Axp.GetBatVoltage(), M5.Axp.GetBatCurrent());
-      udpDevice.write((const uint8_t*)buff, strlen(buff));
       udpDevice .endPacket();
 
 
